@@ -20,6 +20,25 @@
 
 - hosts: web_server
   become: true
+  tasks:
+
+  - name: install unzip
+    tags: terraform
+    package:
+      name: unzip
+
+  - name: install terraform
+    tags: terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+
+- hosts: web_server
+  become: true
   tasks:  
 
   - name: install apache2 package and php packages for Ubuntu
@@ -31,6 +50,22 @@
       state: latest
     when: ansible_distribution == "Ubuntu"
 
+  - name: edit file content
+    tags: apache,apache2,ubuntu
+    lineinfile: 
+      path: /etc/apache2/apache2.conf
+      regexp: '^# This is test'
+      line: '# This is test hello world!!'
+    when: ansible_distribution == "Ubuntu"
+    register: variable
+
+  - name: restart apache2 service when config changed
+    tags: apache,apache2,ubuntu
+    service:
+      name: apache2
+      state: restarted
+    when: variable.changed
+
   - name: install apache package and php packages for CentOS
     tags: apache,centos,httpd
     dnf:
@@ -38,6 +73,14 @@
         - httpd
         - php
       state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: start httpd for CentOS
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
     when: ansible_distribution == "CentOS"
 
   - name: copy default html file for site
