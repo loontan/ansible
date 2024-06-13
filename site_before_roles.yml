@@ -1,0 +1,149 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: update repo cache (CentOS)
+    tags: always
+    dnf:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "CentOS"
+
+  - name: update repo cache (Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: create jack user
+    tags: jack
+    user:
+      name: jack
+      groups: root
+
+  - name: add ssh key for jack
+    tags: jack
+    authorized_key:
+      user: jack
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICzTBM2NRf0+f7a01fcujM8z1LYX+VudGqIJB+0djQZt Ansible"
+
+  - name: add sudoers file for jack
+    tags: jack
+    copy:
+      src: sudoer_jack
+      dest: /etc/sudoers.d/jack
+      owner: root
+      group: root
+      mode: 0440
+
+- hosts: web_server
+  become: true
+  tasks:
+
+  - name: install unzip
+    tags: terraform
+    package:
+      name: unzip
+
+  - name: install terraform
+    tags: terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+
+- hosts: web_server
+  become: true
+  tasks:  
+
+  - name: install apache2 package and php packages for Ubuntu
+    tags: apache,apache2,ubuntu
+    apt:
+      name: 
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: edit file content
+    tags: apache,apache2,ubuntu
+    lineinfile: 
+      path: /etc/apache2/apache2.conf
+      regexp: '^# This is test'
+      line: '# This is test hello world!!'
+    when: ansible_distribution == "Ubuntu"
+    register: variable
+
+  - name: restart apache2 service when config changed
+    tags: apache,apache2,ubuntu
+    service:
+      name: apache2
+      state: restarted
+    when: variable.changed
+
+  - name: install apache package and php packages for CentOS
+    tags: apache,centos,httpd
+    dnf:
+      name: 
+        - httpd
+        - php
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: start httpd for CentOS
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: copy default html file for site
+    tags: apache,apache2,httpd
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+- hosts: db_server
+  become: true
+  tasks:  
+
+  - name: install mariadb package (Ubuntu)
+    tags: db,mariadb,ubuntu
+    apt:
+      name: 
+        - mariadb-server
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install mariadb package (CentOS)
+    tags: centos,db,mariadb
+    dnf:
+      name: 
+        - mariadb
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+- hosts: file_server
+  become: true
+  tasks:  
+
+  - name: install samba package
+    tags: samba
+    package:
+      name: 
+        - samba
+      state: latest
