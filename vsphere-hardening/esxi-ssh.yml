@@ -17,7 +17,7 @@
   - name: Enable SSH (TSM-SSH) for an ESXi Host with Service policy
     community.vmware.vmware_host_service_manager:
      <<: *esxi_login
-     esxi_hostname: '{{ esxi_address }}'
+     esxi_hostname: '{{ item.name }}'
      service_name: TSM-SSH
      service_policy: on
      state: present # Change to Absent if you want to disable SSH

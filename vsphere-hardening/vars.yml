@@ -1,16 +1,17 @@
 # Add ESXi Hosts that you want to modify with the same information
 esxi_info:
-  - { name: '10.11.16.180', vmo: "10.11.17.180",  nfs_ip: "10.11.14.180", netmask: "255.255.255.0" }
- # - { name: '10.10.20.221', vmo: "10.10.40.221",  nfs_ip: "10.10.100.221", netmask: "255.255.255.0" }
+  - { name: '10.10.0.31', vmo: "10.11.17.180",  nfs_ip: "10.11.14.180", netmask: "255.255.255.0" }
+  - { name: '10.10.0.32', vmo: "10.10.40.221",  nfs_ip: "10.10.100.221", netmask: "255.255.255.0" }
+  - { name: '10.10.0.33', vmo: "10.10.40.221",  nfs_ip: "10.10.100.221", netmask: "255.255.255.0" }
 
 #DNS and NTP
-upstream_dns1: "8.8.8.8"
-upstream_dns2: "8.8.4.4"
+upstream_dns1: "10.10.0.100"
+upstream_dns2: "8.8.8.8"
 upstream_ntp1: "0.sg.pool.ntp.org"
 upstream_ntp2: "1.sg.pool.ntp.org"
 
 #Windows Server and Domain Controller Information
-dc_hostname: DC01
+dc_hostname: DC01.itlabsg.net
 dc_address: "10.10.0.100"
 domain_name: "itlabsg.net"
 ad_user: "admininistrator"
@@ -19,14 +20,17 @@ esx_admins_group: "ESXi_Admins"
 
 #VMware ESXi Host Infrastructure
 
-esxi_address: "10.11.16.180"
+esxi_address: "10.10.0.31"
 esxi_password: "Lp@155202"
 esxi_netmask: "255.255.255.0"
 esxi_netmask_cidr: "24"
 esxi_gateway: "10.10.0.1"
-esxi_hostname: "esxi-d.itlabsg.net"
+esxi_hostname: "esxi-a.itlabsg.net"
+esxi_hostname_1: "esxi-a.itlabsg.net"
+esxi_hostname_2: "esxi-b.itlabsg.net"
+esxi_hostname_3: "esxi-c.itlabsg.net"
 esxi_username: "root"
-esxi_local_datastore: "HPE_Local"
+esxi_local_datastore: "local-ds-a"
 ext_storage_ds_name: 'NFS_DS01'
 ext_storage_ds_type: 'nfs'
 ext_storage_nfs_server: '10.11.14.10'
@@ -35,3 +39,6 @@ validate_certs: "no"
 service_policy: 'pressent'
 tsm_policy: 'on'
 tsm_state: 'present'
+vcenter_hostname: "10.10.0.20"
+vcenter_username: "administrator@vsphere.local"
+vcenter_password: "Lp@155202"

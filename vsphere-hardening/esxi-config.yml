@@ -1,6 +1,6 @@
 --- 
 - hosts: localhost 
-  name: ESXi Basic Configuration 
+  name: ESXi Basic Configuration
   gather_facts: false
   vars:
     esxi_login: &esxi_login
@@ -9,13 +9,13 @@
       password: '{{ esxi_password }}'   
       validate_certs: no 
     tsm_policy: on
-    tsm_state: present 
+    tsm_state: present   
   vars_files: 
     vars.yml
   tasks:
 # Set Advanced Options
   - name: Set Advanced Options
-    tags: advanced,base
+    tags: advanced
     community.vmware.vmware_host_config_manager:
       <<: *esxi_login
       esxi_hostname: '{{ item.name }}'
@@ -41,14 +41,17 @@
         "Config.HostAgent.plugins.solo.enableMob": false
         "Config.HostAgent.vmacore.soap.sessionTimeout": 30
         "Annotations.WelcomeMessage": 'Authorized users only. Actual or attempted unauthorized use of this system is prohibited and may result in criminal, civil, security, or administrative proceedings and/or penalties. If you are not an authorized user of this system, exit the system at this time'
-        "Config.Etc.Issue": 'Authorized users only. Actual or attempted unauthorized use of this system is prohibited and may result in criminal, civil, security, or administrative proceedings and/or penalties. If you are not an authorized user of this system, exit the system at this time'
-       #"Syslog.global.logDir": '[]esxilog/'
-       #"Syslog.global.auditRecord.remoteEnable": true
-       #"Syslog.global.logFiltersEnable": false
-       #"Syslog.global.logLevel": info
-       #"Syslog.global.logHost": "udp://syslog-svr.itlabsg.net"
-       #"Syslog.global.certificate.checkSSLCerts": true
-       #"Syslog.global.certificate.strictX509Compliance": true
+        "Config.Etc.issue": 'Authorized users only. Actual or attempted unauthorized use of this system is prohibited and may result in criminal, civil, security, or administrative proceedings and/or penalties. If you are not an authorized user of this system, exit the system at this time'
+      #"Syslog.global.logDir": '[ds-iscsi-1] esxi_logs/esxi-a'
+      #"Syslog.global.auditRecord.storageDirectory": '[ds-iscsi-1] esxi_audit_logs/esxi-a'
+      #"Syslog.global.auditRecord.remoteEnable": true
+        "Syslog.global.auditRecord.storageCapacity": 100
+        "Syslog.global.auditRecord.storageEnable": true
+        "Syslog.global.logFiltersEnable": false
+        "Syslog.global.logLevel": info
+        "Syslog.global.logHost": "udp://syslog-svr.itlabsg.net"
+        "Syslog.global.certificate.checkSSLCerts": true
+        "Syslog.global.certificate.strictX509Compliance": true
     delegate_to: localhost
     loop: '{{ esxi_info }}'
   - name: Set Advance ESXi and NetApp VSC Values. # Apply VMware / NetApp NFS Best Practices
@@ -70,7 +73,7 @@
     delegate_to: localhost
     loop: '{{ esxi_info }}'
   - name: Configure ESXi hostname and upstream DNS servers # Configure Host DNS Settings
-    tags: dns,base
+    tags: dns
     community.vmware.vmware_host_dns:
       <<: *esxi_login
       domain: '{{ domain_name }}'
@@ -80,7 +83,7 @@
       - '{{ upstream_dns2 }}'
     loop: '{{ esxi_info }}'
   - name: Set NTP servers for an ESXi Host # Configure Host NTP Settings
-    tags: ntp,base 
+    tags: ntp
     community.vmware.vmware_host_ntp:
       <<: *esxi_login
       esxi_hostname: '{{ item.name }}'
@@ -92,7 +95,7 @@
     loop: '{{ esxi_info }}'
   - name: Start ntpd service setting for all ESXi Host in given Cluster # Enable NTP Service
     tags: ntp,base
-    community.community.vmware.vmware_host_service_manager:
+    community.vmware.vmware_host_service_manager:
       <<: *esxi_login
       esxi_hostname: '{{ item.name }}'
       service_name: ntpd
@@ -102,6 +105,7 @@
     loop: '{{ esxi_info }}'
 # Disable CIM on Host 
   - name: Disable CIM for an ESXi Host with Service policy
+    tags: service
     community.vmware.vmware_host_service_manager:
      <<: *esxi_login
      esxi_hostname: '{{ esxi_address }}'
@@ -112,6 +116,7 @@
     loop: '{{ esxi_info }}'
 # Disable SLP on Host 
   - name: Disable SLP for an ESXi Host with Service policy
+    tags: service
     community.vmware.vmware_host_service_manager:
      <<: *esxi_login
      esxi_hostname: '{{ esxi_address }}'
@@ -122,6 +127,7 @@
     loop: '{{ esxi_info }}'
 # Disable SNMP on Host 
   - name: Disable SNMP for an ESXi Host with Service policy
+    tags: service
     community.vmware.vmware_host_service_manager:
      <<: *esxi_login
      esxi_hostname: '{{ esxi_address }}'
@@ -130,11 +136,17 @@
      state: absent
     delegate_to: localhost
     loop: '{{ esxi_info }}'
-# Enable Lockdown Mode
-  - name: Enter host system into lockdown mode
+# Enable Lockdown mode
+  - name: Enable lockdown normal
+    tags: lockdown
     community.vmware.vmware_host_lockdown:
-     <<: *esxi_login
-     esxi_hostname: '{{ item.name }}'
-    state: normal
+      hostname: '{{ vcenter_hostname }}'
+      username: '{{ vcenter_username }}'
+      password: '{{ vcenter_password }}'
+      validate_certs: no 
+      esxi_hostname:
+          - '{{ esxi_hostname_1 }}'
+          - '{{ esxi_hostname_2 }}'
+          - '{{ esxi_hostname_3 }}'
+      state: present
     delegate_to: localhost
-    loop: '{{ esxi_info }}'
