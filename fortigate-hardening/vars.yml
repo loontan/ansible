@@ -1,0 +1,21 @@
+### FortiGate Host###
+
+[fortigate]
+
+fgt ansible_host=<FGT IP> ansible_user="admin" ansible_password="admin"
+
+### FortiGate OS Modules ###
+
+[fortigates:vars]
+
+ansible_network_os=fortinet.fortios.fortios
+
+### Specify API connection with HTTP (default SSH)###
+
+[all:vars]
+
+ansible_connection=httpapi
+
+ansible_httpapi_validate_certs=no
+
+ansible_httpapi_use_ssl=yes

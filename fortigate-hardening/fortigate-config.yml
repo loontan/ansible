@@ -1,0 +1,30 @@
+hosts: fortigates
+
+tasks:
+
+- name: Change hostname
+
+  fortinet.fortios.fortios_system_global:
+
+    system_global:
+
+      hostname: “FortiGate_Lab”
+
+- name: Create Address
+
+  fortinet.fortios.fortios_firewall_address:
+
+    state: “present”
+
+    firewall_address:
+
+      name: test_123
+
+      subnet: 10.1.1.1 255.255.255.0
+
+- name: Configure DNS
+  fortinet.fortios.fortios_system_dns:
+  
+    system_dns:
+          alt_primary: "8.8.8.8"
+          alt_secondary: "8.8.4.4"
